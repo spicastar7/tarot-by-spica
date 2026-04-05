@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星のタロット — Three Card Oracle</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #030712;
+  --bg2: #080f24;
+  --gold: #c9a227;
+  --gold-light: #f5e07a;
+  --silver: #b8c4d8;
+  --text: #ddd8ee;
+  --text-muted: #8880a8;
+  --rose: #e8a0b4;
+  --card-border: rgba(201,162,39,0.5);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Zen Maru Gothic', sans-serif;
+  overflow-x: hidden;
+}
+
+#starfield {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+
+.screen {
+  position: absolute; top: 0; left: 0;
+  width: 100%; min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 1;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  transform: translateY(20px);
+  padding: 40px 20px;
+}
+
+.screen.active {
+  opacity: 1; pointer-events: all;
+  transform: translateY(0);
+}
+
+/* ===================== SCREEN 1: INTRO ===================== */
+#screen-intro { gap: 20px; text-align: center; }
+
+#intro-planet {
+  animation: planetFloat 5s ease-in-out infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes planetFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.title-main {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 500;
+  color: var(--gold-light);
+  text-shadow: 0 0 30px rgba(201,162,39,0.8), 0 0 60px rgba(201,162,39,0.4);
+  letter-spacing: 0.15em;
+}
+
+.by-spica {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 300;
+  color: var(--silver);
+  letter-spacing: 0.3em;
+  text-shadow: 0 0 10px rgba(184,196,216,0.6), 0 0 20px rgba(184,196,216,0.2);
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.title-sub {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+  color: var(--silver);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.intro-desc {
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
+  color: var(--text-muted);
+  line-height: 2;
+  max-width: 400px;
+  margin-top: 10px;
+}
+
+.btn-ghost {
+  display: inline-block;
+  margin-top: 24px;
+  padding: 12px 36px;
+  border: 1px solid var(--gold);
+  color: var(--gold-light);
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 1rem;
+  background: transparent;
+  cursor: pointer;
+  letter-spacing: 0.15em;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ghost::before {
+  content: '';
+  position: absolute; top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(201,162,39,0.1), transparent);
+  transition: left 0.4s ease;
+}
+
+.btn-ghost:hover::before { left: 100%; }
+.btn-ghost:hover {
+  box-shadow: 0 0 20px rgba(201,162,39,0.5);
+  background: rgba(201,162,39,0.05);
+}
+
+/* ===================== SCREEN 2: SELECTION ===================== */
+#screen-select { justify-content: flex-start; padding-top: 40px; gap: 24px; }
+
+.select-title {
+  font-size: clamp(0.85rem, 2.5vw, 1rem);
+  color: var(--silver);
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.position-slots {
+  display: flex; gap: 16px; justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pos-slot {
+  width: 72px; height: 108px;
+  border: 1px dashed var(--card-border);
+  border-radius: 6px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px;
+  transition: all 0.4s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.pos-slot .pos-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.pos-slot.filled {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(201,162,39,0.3);
+}
+
+.pos-slot .mini-card-svg {
+  width: 60px; height: 90px;
+  position: absolute; top: 0; left: 6px;
+  display: none;
+}
+
+.pos-slot.filled .mini-card-svg { display: block; }
+.pos-slot.filled .pos-label { display: none; }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.deck-card {
+  width: 100%; aspect-ratio: 2/3;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.3s ease;
+  border: 1px solid rgba(201,162,39,0.2);
+  overflow: hidden;
+  background: transparent;
+}
+
+.deck-card svg { width: 100%; height: 100%; display: block; }
+
+.deck-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(201,162,39,0.4);
+  border-color: var(--gold);
+}
+
+.deck-card.selected {
+  opacity: 0.35;
+  transform: translateY(0) scale(0.95);
+  cursor: default;
+  pointer-events: none;
+}
+
+.btn-read {
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.6s ease;
+  font-size: 1.05rem;
+  padding: 14px 44px;
+}
+
+.btn-read.visible { opacity: 1; pointer-events: all; }
+
+/* ===================== SCREEN 3: READING ===================== */
+#screen-reading { justify-content: flex-start; padding-top: 40px; gap: 28px; }
+
+.reading-title {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  color: var(--gold-light);
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+.cards-row {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.reading-card-wrap {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  max-width: 160px;
+}
+
+.pos-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.card-flip-container {
+  width: 160px; height: 240px;
+  perspective: 900px;
+  cursor: default;
+}
+
+.card-flip-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-flip-inner.flipped { transform: rotateY(180deg); }
+
+.card-face, .card-back-face {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+}
+
+.card-face { transform: rotateY(180deg); }
+.card-face svg, .card-back-face svg { width: 100%; height: 100%; display: block; }
+
+.card-face.reversed svg { transform: rotate(180deg); }
+
+.card-info {
+  text-align: center; opacity: 0;
+  transition: opacity 0.6s ease;
+  width: 100%;
+}
+
+.card-info.visible { opacity: 1; }
+
+.card-name-jp {
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 400;
+}
+
+.card-name-en {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+.orient-badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+}
+
+.orient-badge.upright {
+  border: 1px solid var(--gold);
+  color: var(--gold-light);
+}
+
+.orient-badge.reversed {
+  border: 1px solid var(--rose);
+  color: var(--rose);
+}
+
+.card-keywords {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.6;
+  max-width: 140px;
+  text-align: center;
+}
+
+.reading-message {
+  max-width: 560px;
+  width: 100%;
+  background: rgba(8,15,36,0.7);
+  border: 1px solid rgba(201,162,39,0.3);
+  border-radius: 8px;
+  padding: 24px 28px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  line-height: 2;
+}
+
+.reading-message.visible { opacity: 1; }
+
+.reading-message p {
+  font-size: clamp(0.82rem, 2vw, 0.92rem);
+  color: var(--text);
+  line-height: 2.1;
+}
+
+.lp-quote {
+  display: block;
+  margin-top: 14px;
+  font-style: italic;
+  color: var(--gold-light);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+
+.btn-again {
+  margin-top: 10px;
+  margin-bottom: 40px;
+}
+
+/* Decorative divider */
+.star-divider {
+  width: 120px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 4px auto;
+  position: relative;
+}
+
+.star-divider::after {
+  content: '✦';
+  position: absolute;
+  top: -9px; left: 50%;
+  transform: translateX(-50%);
+  color: var(--gold);
+  font-size: 10px;
+}
+</style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- SCREEN 1: INTRO -->
+<div class="screen active" id="screen-intro">
+  <div id="intro-planet">
+    <svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+      <!-- Planet B-612 -->
+      <defs>
+        <radialGradient id="planetGrad" cx="40%" cy="35%">
+          <stop offset="0%" stop-color="#4a3a6e"/>
+          <stop offset="100%" stop-color="#0d0820"/>
+        </radialGradient>
+        <radialGradient id="glowGrad" cx="50%" cy="50%">
+          <stop offset="0%" stop-color="rgba(201,162,39,0.12)"/>
+          <stop offset="100%" stop-color="transparent"/>
+        </radialGradient>
+      </defs>
+      <!-- Glow -->
+      <ellipse cx="70" cy="78" rx="55" ry="52" fill="url(#glowGrad)"/>
+      <!-- Planet body -->
+      <circle cx="70" cy="78" r="40" fill="url(#planetGrad)" stroke="rgba(201,162,39,0.3)" stroke-width="0.8"/>
+      <!-- Surface detail lines -->
+      <path d="M32,68 Q70,56 108,68" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" fill="none"/>
+      <path d="M36,82 Q70,94 104,82" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" fill="none"/>
+      <!-- Little Prince figure (enlarged, colored) -->
+      <!-- Gentle wavy hair — Little Prince fairy-tale style -->
+      <!-- Side volume / temple (slightly darker, behind main hair) -->
+      <ellipse cx="63.5" cy="14.5" rx="4.8" ry="9" fill="#d89c00" opacity="0.68"/>
+      <ellipse cx="76.5" cy="14.5" rx="4.8" ry="9" fill="#d89c00" opacity="0.68"/>
+      <!-- Main hair body with smooth 2-bump wave top (C = cubic bezier) -->
+      <path d="M62,13 C61,9 62,4.5 65,2.5 C67,1 68,5 70.5,3.5 C73,2 74,1 76,3.5 C78,6 78.5,9.5 78,13 Q75,18 70,17.5 Q65,18 62,13 Z" fill="#f5c518" opacity="0.96"/>
+      <!-- Hair flow line (内側のウェーブ感) -->
+      <path d="M64,6.5 C66,4.5 68,7 70.5,6 C73,5 75,6 76.5,8" stroke="#c08800" stroke-width="1.4" fill="none" opacity="0.32" stroke-linecap="round"/>
+      <!-- Soft highlight along top wave -->
+      <path d="M65,4 C67.5,1.5 70,4 73,2.5" stroke="#fff4a0" stroke-width="1.5" fill="none" opacity="0.55" stroke-linecap="round"/>
+      <!-- Face (warm skin) -->
+      <circle cx="70" cy="14" r="8" fill="#fdd9a0" opacity="0.98"/>
+      <!-- Eyes -->
+      <circle cx="67" cy="13" r="1.6" fill="#2d1a0a"/>
+      <circle cx="73" cy="13" r="1.6" fill="#2d1a0a"/>
+      <!-- Eye shine -->
+      <circle cx="67.6" cy="12.4" r="0.55" fill="white" opacity="0.85"/>
+      <circle cx="73.6" cy="12.4" r="0.55" fill="white" opacity="0.85"/>
+      <!-- Smile -->
+      <path d="M67.5,17 Q70,19.5 72.5,17" stroke="#a06040" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      <!-- Jumpsuit body (yellow-green) -->
+      <path d="M63,22 L63,38 Q63,40 66,40 L74,40 Q77,40 77,38 L77,22 Q74,20 70,20 Q66,20 63,22Z" fill="#8dc63f" opacity="0.95"/>
+      <!-- Jumpsuit center seam -->
+      <line x1="70" y1="22" x2="70" y2="39" stroke="#76ab2e" stroke-width="0.9" opacity="0.5"/>
+      <!-- Arms (yellow-green) -->
+      <path d="M63,26 L54,33" stroke="#8dc63f" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M77,26 L86,33" stroke="#8dc63f" stroke-width="4.5" stroke-linecap="round"/>
+      <!-- Scarf / muffler (lemon color) -->
+      <path d="M65,21 Q68,26 71,23 Q74,20 77,25" stroke="#e8ff3c" stroke-width="3.8" fill="none" stroke-linecap="round"/>
+      <line x1="67" y1="23" x2="63.5" y2="34" stroke="#e8ff3c" stroke-width="3" stroke-linecap="round"/>
+      <!-- Stars around -->
+      <path d="M20,30 L21.5,26 L23,30 L27,31.5 L23,33 L21.5,37 L20,33 L16,31.5 Z" fill="#f5e07a" opacity="0.9"/>
+      <path d="M105,20 L106,17 L107,20 L110,21 L107,22 L106,25 L105,22 L102,21 Z" fill="#f5e07a" opacity="0.7"/>
+      <path d="M115,60 L116,57 L117,60 L120,61 L117,62 L116,65 L115,62 L112,61 Z" fill="#b8c4d8" opacity="0.6"/>
+      <!-- Rose on planet (red) -->
+      <ellipse cx="58" cy="43" rx="4" ry="3" fill="#e53935" opacity="0.92"/>
+      <ellipse cx="58" cy="42.5" rx="2.2" ry="1.5" fill="#ff7070" opacity="0.65"/>
+      <line x1="58" y1="46" x2="58" y2="52" stroke="#69f0ae" stroke-width="1.2"/>
+    </svg>
+  </div>
+
+  <h1 class="title-main">星のタロット</h1>
+  <div class="by-spica">by spica*</div>
+  <div class="title-sub">Three Card Oracle</div>
+
+  <div class="star-divider" style="margin-top:16px;"></div>
+
+  <p class="intro-desc">
+    星の王子さまが導く、あなただけのストーリー。<br>
+    過去・現在・未来、三枚のカードが<br>
+    心の扉をそっと開きます。
+  </p>
+
+  <button class="btn-ghost" onclick="goToSelect()">占いを始める</button>
+</div>
+
+<!-- SCREEN 2: SELECTION -->
+<div class="screen" id="screen-select">
+  <p class="select-title">3枚のカードを直感で選んでください</p>
+
+  <div class="position-slots" id="position-slots">
+    <div class="pos-slot" id="slot-0">
+      <span class="pos-label">過去</span>
+      <div class="mini-card-svg" id="mini-0"></div>
+    </div>
+    <div class="pos-slot" id="slot-1">
+      <span class="pos-label">現在</span>
+      <div class="mini-card-svg" id="mini-1"></div>
+    </div>
+    <div class="pos-slot" id="slot-2">
+      <span class="pos-label">未来</span>
+      <div class="mini-card-svg" id="mini-2"></div>
+    </div>
+  </div>
+
+  <div class="card-grid" id="card-grid"></div>
+
+  <button class="btn-ghost btn-read" id="btn-read" onclick="goToReading()">星を読む →</button>
+</div>
+
+<!-- SCREEN 3: READING -->
+<div class="screen" id="screen-reading">
+  <h2 class="reading-title">星の導き</h2>
+  <div class="star-divider"></div>
+
+  <div class="cards-row" id="cards-row">
+    <!-- Filled by JS -->
+  </div>
+
+  <div class="reading-message" id="reading-message">
+    <!-- Filled by JS -->
+  </div>
+
+  <button class="btn-ghost btn-again" onclick="resetApp()">もう一度占う</button>
+</div>
+
+<script>
+// ===================== CARD DATA =====================
+const CARDS = [
+  { id:0,  num:'Ⅰ',   name:'愚者',       nameEn:'The Fool',           upright:'新しい始まり・冒険・可能性・純粋な心', reversed:'無謀・軽率・準備不足・リスクの無視' },
+  { id:1,  num:'Ⅱ',   name:'魔術師',     nameEn:'The Magician',       upright:'意志力・創造性・スキル・集中', reversed:'才能の無駄遣い・操作・詐欺' },
+  { id:2,  num:'Ⅲ',   name:'女教皇',     nameEn:'The High Priestess', upright:'直感・神秘・内なる知恵・沈黙', reversed:'秘密・直感の無視・表面的判断' },
+  { id:3,  num:'Ⅳ',   name:'女帝',       nameEn:'The Empress',        upright:'豊かさ・母性・自然・創造力', reversed:'過保護・依存・創造性の停滞' },
+  { id:4,  num:'Ⅴ',   name:'皇帝',       nameEn:'The Emperor',        upright:'権威・安定・構造・保護', reversed:'支配・頑固・独裁的' },
+  { id:5,  num:'Ⅵ',   name:'法王',       nameEn:'The Hierophant',     upright:'伝統・信仰・指導・規範', reversed:'反抗・個人主義・革新' },
+  { id:6,  num:'Ⅶ',   name:'恋人',       nameEn:'The Lovers',         upright:'愛・調和・選択・価値観の一致', reversed:'不一致・誘惑・価値観の衝突' },
+  { id:7,  num:'Ⅷ',   name:'戦車',       nameEn:'The Chariot',        upright:'勝利・意志力・前進・克服', reversed:'暴走・自制の欠如・方向性の喪失' },
+  { id:8,  num:'Ⅸ',   name:'力',         nameEn:'Strength',           upright:'内なる強さ・勇気・忍耐・情熱', reversed:'自信の欠如・弱さ・内的葛藤' },
+  { id:9,  num:'Ⅹ',   name:'隠者',       nameEn:'The Hermit',         upright:'内省・孤独・探求・精神的導き', reversed:'孤立・引きこもり・疎外感' },
+  { id:10, num:'Ⅺ',   name:'運命の輪',   nameEn:'Wheel of Fortune',   upright:'運命・変化・サイクル・好機', reversed:'不運・抵抗・変化への恐れ' },
+  { id:11, num:'Ⅻ',   name:'正義',       nameEn:'Justice',            upright:'真実・公正・因果・バランス', reversed:'不公正・偏見・責任逃れ' },
+  { id:12, num:'ⅩⅢ',  name:'吊るされた男', nameEn:'The Hanged Man',   upright:'犠牲・視点の変換・待機・啓示', reversed:'無駄な犠牲・停滞・遅延' },
+  { id:13, num:'ⅩⅣ',  name:'死神',       nameEn:'Death',              upright:'変容・終わりと始まり・手放す', reversed:'変化への抵抗・停滞・恐れ' },
+  { id:14, num:'ⅩⅤ',  name:'節制',       nameEn:'Temperance',         upright:'調和・バランス・忍耐・統合', reversed:'不均衡・過剰・不調和' },
+  { id:15, num:'ⅩⅥ',  name:'悪魔',       nameEn:'The Devil',          upright:'束縛・執着・物質主義・影', reversed:'解放・自覚・鎖を断ち切る' },
+  { id:16, num:'ⅩⅦ',  name:'塔',         nameEn:'The Tower',          upright:'突然の変化・崩壊・啓示・解放', reversed:'危機の回避・変化への抵抗' },
+  { id:17, num:'ⅩⅧ',  name:'星',         nameEn:'The Star',           upright:'希望・癒し・インスピレーション・導き', reversed:'絶望・希望の喪失・失望' },
+  { id:18, num:'ⅩⅨ',  name:'月',         nameEn:'The Moon',           upright:'幻想・不安・深層心理・夢', reversed:'恐れの克服・真実の発見・明確さ' },
+  { id:19, num:'ⅩⅩ',  name:'太陽',       nameEn:'The Sun',            upright:'喜び・成功・活力・輝き', reversed:'悲観・自己懐疑・エネルギーの低下' },
+  { id:20, num:'ⅩⅪ',  name:'審判',       nameEn:'Judgement',          upright:'覚醒・変革・使命・再生', reversed:'自己批判・変化への恐れ・後悔' },
+  { id:21, num:'ⅩⅫ',  name:'世界',       nameEn:'The World',          upright:'完成・達成・統合・旅の終わり', reversed:'未完成・遅延・目標の未達' },
+];
+
+const CARD_COLORS = [
+  { g1:'#120800', g2:'#4a2000', acc:'#ffc107' },
+  { g1:'#0e0028', g2:'#3c0082', acc:'#e040fb' },
+  { g1:'#020a28', g2:'#04286e', acc:'#90caf9' },
+  { g1:'#1a0016', g2:'#580050', acc:'#f48fb1' },
+  { g1:'#1a0400', g2:'#5c1400', acc:'#ff7043' },
+  { g1:'#001a0c', g2:'#005c28', acc:'#69f0ae' },
+  { g1:'#1a0408', g2:'#6e1428', acc:'#ff80ab' },
+  { g1:'#000c1a', g2:'#00285c', acc:'#82b1ff' },
+  { g1:'#1a1000', g2:'#5c3800', acc:'#ffca28' },
+  { g1:'#080812', g2:'#181838', acc:'#b0bec5' },
+  { g1:'#0a0028', g2:'#320078', acc:'#ce93d8' },
+  { g1:'#000a1a', g2:'#002858', acc:'#b3e5fc' },
+  { g1:'#001a1a', g2:'#005c5c', acc:'#80deea' },
+  { g1:'#04000e', g2:'#10003c', acc:'#b39ddb' },
+  { g1:'#001428', g2:'#003868', acc:'#80d8ff' },
+  { g1:'#1a0000', g2:'#5c0000', acc:'#ff1744' },
+  { g1:'#04040e', g2:'#0e0e2c', acc:'#ffff00' },
+  { g1:'#000418', g2:'#000e50', acc:'#fff176' },
+  { g1:'#040019', g2:'#0e0050', acc:'#e1bee7' },
+  { g1:'#1a0e00', g2:'#5c3200', acc:'#ffee58' },
+  { g1:'#001a0e', g2:'#005c36', acc:'#a5d6a7' },
+  { g1:'#04001a', g2:'#100050', acc:'#b39ddb' },
+];
+
+// ===================== SEEDED RANDOM =====================
+function seededRand(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+// ===================== CARD SVG BUILDER =====================
+function buildCardSVG(card) {
+  const c = CARD_COLORS[card.id];
+  const rng = seededRand(card.id * 31337 + 7);
+  const gid = `cg${card.id}`;
+
+  // Scattered background stars
+  let stars = '';
+  for (let i = 0; i < 12; i++) {
+    const x = rng() * 150 + 5;
+    const y = rng() * 180 + 10;
+    const r = rng() * 1.2 + 0.3;
+    const op = rng() * 0.5 + 0.2;
+    stars += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="white" opacity="${op.toFixed(2)}"/>`;
+  }
+
+  // Illustrations per card
+  const illus = buildIllustration(card.id, c.acc, rng);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <defs>
+    <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${c.g1}"/>
+      <stop offset="100%" stop-color="${c.g2}"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="240" rx="6" fill="url(#${gid})"/>
+  ${stars}
+  <!-- Border frame -->
+  <rect x="6" y="6" width="148" height="228" rx="4" fill="none" stroke="${c.acc}" stroke-width="0.6" opacity="0.5"/>
+  <rect x="10" y="10" width="140" height="220" rx="3" fill="none" stroke="${c.acc}" stroke-width="0.3" opacity="0.3"/>
+  <!-- Illustration -->
+  ${illus}
+  <!-- Bottom separator -->
+  <line x1="16" y1="208" x2="144" y2="208" stroke="${c.acc}" stroke-width="0.5" opacity="0.6"/>
+  <!-- Numeral -->
+  <text x="80" y="220" text-anchor="middle" font-family="serif" font-size="8" fill="${c.acc}" opacity="0.8">${card.num}</text>
+  <!-- Japanese name -->
+  <text x="80" y="232" text-anchor="middle" font-family="serif" font-size="9" fill="white" opacity="0.9">${card.name}</text>
+</svg>`;
+}
+
+function sparkle(cx, cy, r, fill, op=1) {
+  const r2 = r * 0.4;
+  return `<path d="M${cx},${cy-r} L${cx+r2},${cy-r2} L${cx+r},${cy} L${cx+r2},${cy+r2} L${cx},${cy+r} L${cx-r2},${cy+r2} L${cx-r},${cy} L${cx-r2},${cy-r2} Z" fill="${fill}" opacity="${op}"/>`;
+}
+
+function figure(x, y, acc, scale=1) {
+  const s = scale;
+  return `
+    <circle cx="${x}" cy="${y - 16*s}" r="${4*s}" fill="${acc}" opacity="0.9"/>
+    <line x1="${x}" y1="${y - 12*s}" x2="${x}" y2="${y}" stroke="${acc}" stroke-width="${1.4*s}" opacity="0.85"/>
+    <line x1="${x}" y1="${y - 9*s}" x2="${x - 6*s}" y2="${y - 4*s}" stroke="${acc}" stroke-width="${1.2*s}" opacity="0.85"/>
+    <line x1="${x}" y1="${y - 9*s}" x2="${x + 6*s}" y2="${y - 4*s}" stroke="${acc}" stroke-width="${1.2*s}" opacity="0.85"/>
+    <line x1="${x}" y1="${y}" x2="${x - 4*s}" y2="${y + 8*s}" stroke="${acc}" stroke-width="${1.2*s}" opacity="0.85"/>
+    <line x1="${x}" y1="${y}" x2="${x + 4*s}" y2="${y + 8*s}" stroke="${acc}" stroke-width="${1.2*s}" opacity="0.85"/>`;
+}
+
+function planet(cx, cy, rx, ry, fill) {
+  return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${fill}" opacity="0.85"/>`;
+}
+
+function buildIllustration(id, acc, rng) {
+  const white = 'rgba(255,255,255,0.85)';
+  const dimW = 'rgba(255,255,255,0.5)';
+
+  switch(id) {
+    case 0: // Fool: figure stepping off planet edge toward stars, dotted path
+      return `
+        ${planet(80, 210, 90, 22, 'rgba(100,80,40,0.7)')}
+        ${figure(100, 190, acc)}
+        ${sparkle(40, 60, 6, acc, 0.9)}
+        ${sparkle(120, 80, 4, acc, 0.7)}
+        ${sparkle(60, 100, 3, white, 0.5)}
+        <circle cx="38" cy="148" r="2" fill="${acc}" opacity="0.5"/>
+        <circle cx="50" cy="140" r="1.5" fill="${acc}" opacity="0.4"/>
+        <circle cx="64" cy="133" r="1.5" fill="${acc}" opacity="0.4"/>
+        <circle cx="78" cy="128" r="1.5" fill="${acc}" opacity="0.4"/>
+        <circle cx="92" cy="124" r="1.5" fill="${acc}" opacity="0.4"/>`;
+
+    case 1: // Magician: figure arm raised, wand, infinity, 4 symbols
+      return `
+        ${planet(80, 215, 90, 22, 'rgba(60,0,130,0.7)')}
+        ${figure(80, 185, acc)}
+        <line x1="84" y1="168" x2="84" y2="148" stroke="${acc}" stroke-width="1.5"/>
+        <circle cx="84" cy="145" r="3" fill="${acc}" opacity="0.8"/>
+        <path d="M60,90 Q68,80 76,90 Q84,100 92,90 Q100,80 108,90" stroke="${acc}" stroke-width="1.5" fill="none" opacity="0.8"/>
+        ${sparkle(44, 120, 3, acc, 0.7)}
+        ${sparkle(116, 120, 3, acc, 0.7)}
+        ${sparkle(44, 140, 3, acc, 0.7)}
+        ${sparkle(116, 140, 3, acc, 0.7)}`;
+
+    case 2: // High Priestess: seated, crescent pillars, scroll
+      return `
+        <!-- Left crescent -->
+        <path d="M36,180 Q30,155 40,130 Q44,155 44,180 Z" fill="${acc}" opacity="0.4"/>
+        <!-- Right crescent -->
+        <path d="M124,180 Q118,155 120,130 Q130,155 130,180 Z" fill="${acc}" opacity="0.4"/>
+        ${figure(80, 185, acc)}
+        <!-- Scroll -->
+        <rect x="62" y="192" width="36" height="8" rx="2" fill="${acc}" opacity="0.4"/>
+        <line x1="66" y1="194" x2="94" y2="194" stroke="white" stroke-width="0.6" opacity="0.4"/>
+        <line x1="66" y1="197" x2="94" y2="197" stroke="white" stroke-width="0.6" opacity="0.3"/>
+        ${sparkle(80, 100, 5, acc, 0.8)}
+        ${sparkle(55, 80, 3, white, 0.5)}
+        ${sparkle(105, 80, 3, white, 0.5)}`;
+
+    case 3: // Empress: large rose, leafy vines, crown
+      return `
+        <!-- Rose -->
+        <circle cx="80" cy="130" r="18" fill="${acc}" opacity="0.25"/>
+        <circle cx="80" cy="130" r="12" fill="${acc}" opacity="0.4"/>
+        <circle cx="80" cy="130" r="6" fill="${acc}" opacity="0.7"/>
+        <ellipse cx="64" cy="125" rx="7" ry="4" fill="${acc}" opacity="0.35" transform="rotate(-30,64,125)"/>
+        <ellipse cx="96" cy="125" rx="7" ry="4" fill="${acc}" opacity="0.35" transform="rotate(30,96,125)"/>
+        <!-- Stem & leaves -->
+        <line x1="80" y1="148" x2="80" y2="190" stroke="#69f0ae" stroke-width="2" opacity="0.6"/>
+        <ellipse cx="68" cy="168" rx="10" ry="5" fill="#69f0ae" opacity="0.4" transform="rotate(-30,68,168)"/>
+        <ellipse cx="92" cy="175" rx="10" ry="5" fill="#69f0ae" opacity="0.4" transform="rotate(30,92,175)"/>
+        <!-- Crown -->
+        <path d="M60,90 L65,76 L72,88 L80,72 L88,88 L95,76 L100,90 Z" fill="none" stroke="${acc}" stroke-width="1.2" opacity="0.7"/>`;
+
+    case 4: // Emperor: figure on throne, scepter
+      return `
+        <!-- Mountain / rocky base -->
+        <polygon points="30,200 80,155 130,200" fill="rgba(80,40,20,0.4)"/>
+        <!-- Throne cube -->
+        <rect x="64" y="170" width="32" height="24" fill="rgba(80,40,20,0.5)" stroke="${acc}" stroke-width="0.8" opacity="0.8"/>
+        ${figure(80, 178, acc)}
+        <!-- Scepter -->
+        <line x1="92" y1="162" x2="92" y2="188" stroke="${acc}" stroke-width="1.5"/>
+        ${sparkle(92, 158, 4, acc, 0.9)}
+        ${sparkle(44, 80, 4, acc, 0.6)}
+        ${sparkle(116, 80, 4, acc, 0.6)}`;
+
+    case 5: // Hierophant: tall crown, two kneeling figures, crossed keys
+      return `
+        <!-- Crown -->
+        <path d="M72,80 L72,60 L80,48 L88,60 L88,80" fill="none" stroke="${acc}" stroke-width="2" opacity="0.7"/>
+        <circle cx="80" cy="46" r="4" fill="${acc}" opacity="0.8"/>
+        <!-- Crossed keys -->
+        <line x1="70" y1="130" x2="90" y2="150" stroke="${acc}" stroke-width="1.5" opacity="0.7"/>
+        <line x1="90" y1="130" x2="70" y2="150" stroke="${acc}" stroke-width="1.5" opacity="0.7"/>
+        <!-- Two kneeling figures -->
+        <circle cx="55" cy="175" r="3.5" fill="${acc}" opacity="0.7"/>
+        <path d="M55,178 L55,190 L50,200" stroke="${acc}" stroke-width="1.2" fill="none" opacity="0.7"/>
+        <circle cx="105" cy="175" r="3.5" fill="${acc}" opacity="0.7"/>
+        <path d="M105,178 L105,190 L110,200" stroke="${acc}" stroke-width="1.2" fill="none" opacity="0.7"/>`;
+
+    case 6: // Lovers: two planets side by side, figure each, star between
+      return `
+        <!-- Planet left -->
+        <ellipse cx="46" cy="185" rx="38" ry="12" fill="rgba(110,20,40,0.6)"/>
+        <!-- Planet right -->
+        <ellipse cx="114" cy="185" rx="38" ry="12" fill="rgba(110,20,40,0.6)"/>
+        <!-- Figure left -->
+        <circle cx="46" cy="162" r="3.5" fill="${acc}" opacity="0.9"/>
+        <line x1="46" y1="166" x2="46" y2="176" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="46" y1="169" x2="42" y2="173" stroke="${acc}" stroke-width="1.2"/>
+        <line x1="46" y1="169" x2="50" y2="173" stroke="${acc}" stroke-width="1.2"/>
+        <!-- Figure right -->
+        <circle cx="114" cy="162" r="3.5" fill="${acc}" opacity="0.9"/>
+        <line x1="114" y1="166" x2="114" y2="176" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="114" y1="169" x2="110" y2="173" stroke="${acc}" stroke-width="1.2"/>
+        <line x1="114" y1="169" x2="118" y2="173" stroke="${acc}" stroke-width="1.2"/>
+        <!-- Central star -->
+        ${sparkle(80, 120, 10, acc, 0.9)}
+        ${sparkle(80, 78, 5, 'white', 0.6)}`;
+
+    case 7: // Chariot: chariot silhouette, star-streaks, crown
+      return `
+        <!-- Crown -->
+        <path d="M60,80 L65,65 L80,75 L95,65 L100,80 Z" fill="none" stroke="${acc}" stroke-width="1.5" opacity="0.7"/>
+        <!-- Chariot body -->
+        <rect x="56" y="150" width="48" height="30" rx="3" fill="none" stroke="${acc}" stroke-width="1.5" opacity="0.7"/>
+        <!-- Wheels -->
+        <circle cx="66" cy="184" r="6" fill="none" stroke="${acc}" stroke-width="1.2" opacity="0.6"/>
+        <circle cx="94" cy="184" r="6" fill="none" stroke="${acc}" stroke-width="1.2" opacity="0.6"/>
+        <!-- Star streaks pulling -->
+        <path d="M40,130 L56,155" stroke="${acc}" stroke-width="2" opacity="0.7"/>
+        <path d="M120,130 L104,155" stroke="${acc}" stroke-width="2" opacity="0.7"/>
+        ${sparkle(38, 126, 5, acc, 0.9)}
+        ${sparkle(122, 126, 5, acc, 0.9)}
+        ${figure(80, 155, acc)}`;
+
+    case 8: // Strength: figure touching giant star, infinity
+      return `
+        <!-- Infinity -->
+        <path d="M52,95 Q62,80 72,95 Q82,110 92,95 Q102,80 112,95 Q102,110 92,95 Q82,80 72,95 Q62,110 52,95 Z" fill="none" stroke="${acc}" stroke-width="1.5" opacity="0.7"/>
+        <!-- Large gentle star -->
+        ${sparkle(80, 155, 22, acc, 0.25)}
+        ${sparkle(80, 155, 14, acc, 0.4)}
+        ${sparkle(80, 155, 7, acc, 0.8)}
+        <!-- Small figure touching star -->
+        <circle cx="46" cy="162" r="3.5" fill="${acc}" opacity="0.9"/>
+        <line x1="46" y1="166" x2="46" y2="176" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="46" y1="169" x2="60" y2="163" stroke="${acc}" stroke-width="1.2"/>
+        <line x1="46" y1="169" x2="42" y2="174" stroke="${acc}" stroke-width="1.2"/>`;
+
+    case 9: // Hermit: lone figure on tiny planet, lantern with glow
+      return `
+        ${planet(80, 208, 55, 16, 'rgba(24,24,56,0.8)')}
+        ${figure(80, 190, acc)}
+        <!-- Lantern -->
+        <rect x="88" y="173" width="7" height="9" rx="1" fill="none" stroke="${acc}" stroke-width="1" opacity="0.8"/>
+        <circle cx="91.5" cy="177.5" r="3" fill="${acc}" opacity="0.5"/>
+        <!-- Lantern glow rays -->
+        ${[0,45,90,135,180,225,270,315].map(a => {
+          const rad = a * Math.PI / 180;
+          const x1 = 91.5 + 4 * Math.cos(rad);
+          const y1 = 177.5 + 4 * Math.sin(rad);
+          const x2 = 91.5 + 12 * Math.cos(rad);
+          const y2 = 177.5 + 12 * Math.sin(rad);
+          return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${acc}" stroke-width="0.8" opacity="0.35"/>`;
+        }).join('')}
+        ${sparkle(40, 80, 4, acc, 0.6)}
+        ${sparkle(120, 100, 3, white, 0.4)}`;
+
+    case 10: // Fortune: large 8-spoke wheel, constellation dots
+      return `
+        <!-- Outer wheel -->
+        <circle cx="80" cy="140" r="55" fill="none" stroke="${acc}" stroke-width="1.2" opacity="0.4"/>
+        <circle cx="80" cy="140" r="42" fill="none" stroke="${acc}" stroke-width="0.8" opacity="0.3"/>
+        <circle cx="80" cy="140" r="16" fill="none" stroke="${acc}" stroke-width="1" opacity="0.6"/>
+        <!-- 8 spokes -->
+        ${[0,22.5,45,67.5,90,112.5,135,157.5].map(a => {
+          const rad = a * Math.PI / 180;
+          const x1 = 80 + 16 * Math.cos(rad);
+          const y1 = 140 + 16 * Math.sin(rad);
+          const x2 = 80 + 42 * Math.cos(rad);
+          const y2 = 140 + 42 * Math.sin(rad);
+          const cx2 = 80 + 55 * Math.cos(rad);
+          const cy2 = 140 + 55 * Math.sin(rad);
+          return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${acc}" stroke-width="0.8" opacity="0.5"/>
+                  <circle cx="${cx2.toFixed(1)}" cy="${cy2.toFixed(1)}" r="2" fill="${acc}" opacity="0.7"/>`;
+        }).join('')}
+        ${sparkle(80, 140, 6, acc, 0.9)}`;
+
+    case 11: // Justice: tall sword, balance scale
+      return `
+        <!-- Sword -->
+        <line x1="80" y1="70" x2="80" y2="175" stroke="${acc}" stroke-width="2" opacity="0.8"/>
+        <!-- Crossguard -->
+        <line x1="64" y1="120" x2="96" y2="120" stroke="${acc}" stroke-width="2.5" opacity="0.7"/>
+        <!-- Sword tip -->
+        <path d="M76,68 L80,58 L84,68 Z" fill="${acc}" opacity="0.8"/>
+        <!-- Balance beam -->
+        <line x1="50" y1="155" x2="110" y2="155" stroke="${acc}" stroke-width="1.2" opacity="0.6"/>
+        <!-- Pans -->
+        <path d="M40,165 Q50,155 60,165" stroke="${acc}" stroke-width="1" fill="rgba(201,162,39,0.15)" opacity="0.7"/>
+        <path d="M100,165 Q110,155 120,165" stroke="${acc}" stroke-width="1" fill="rgba(201,162,39,0.15)" opacity="0.7"/>
+        <line x1="50" y1="155" x2="50" y2="165" stroke="${acc}" stroke-width="0.8" opacity="0.5"/>
+        <line x1="110" y1="155" x2="110" y2="165" stroke="${acc}" stroke-width="0.8" opacity="0.5"/>
+        ${sparkle(80, 95, 4, acc, 0.7)}`;
+
+    case 12: // Hanged Man: figure upside down from crescent, 7 stars
+      return `
+        <!-- Crescent moon -->
+        <path d="M55,90 Q40,105 55,120 Q68,108 68,105 Q68,102 55,90 Z" fill="${acc}" opacity="0.5"/>
+        <!-- Rope -->
+        <line x1="60" y1="104" x2="80" y2="120" stroke="${acc}" stroke-width="1.2" opacity="0.7"/>
+        <!-- Upside down figure -->
+        <circle cx="80" cy="136" r="4" fill="${acc}" opacity="0.9"/>
+        <line x1="80" y1="132" x2="80" y2="120" stroke="${acc}" stroke-width="1.4"/>
+        <line x1="80" y1="128" x2="74" y2="122" stroke="${acc}" stroke-width="1.2"/>
+        <line x1="80" y1="128" x2="86" y2="122" stroke="${acc}" stroke-width="1.2"/>
+        <line x1="80" y1="120" x2="74" y2="113" stroke="${acc}" stroke-width="1.2"/>
+        <line x1="80" y1="120" x2="86" y2="113" stroke="${acc}" stroke-width="1.2"/>
+        <!-- Halo of 7 stars -->
+        ${Array.from({length:7}, (_,i) => {
+          const a = (i * 360/7 - 90) * Math.PI / 180;
+          const cx = 80 + 14 * Math.cos(a);
+          const cy = 136 + 14 * Math.sin(a);
+          return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="1.5" fill="${acc}" opacity="0.8"/>`;
+        }).join('')}`;
+
+    case 13: // Death: falling rose petals, new bud rising, dawn horizon
+      return `
+        <!-- Dawn horizon -->
+        <path d="M16,175 Q80,155 144,175" fill="rgba(255,100,50,0.15)" stroke="rgba(255,100,50,0.4)" stroke-width="1"/>
+        <!-- Rising sun glow -->
+        <ellipse cx="80" cy="176" rx="30" ry="8" fill="${acc}" opacity="0.12"/>
+        <!-- New bud -->
+        <line x1="80" y1="175" x2="80" y2="155" stroke="#69f0ae" stroke-width="1.8" opacity="0.8"/>
+        <path d="M80,155 Q88,145 84,135 Q80,145 72,138 Q78,148 80,155" fill="${acc}" opacity="0.7"/>
+        <!-- Falling petals -->
+        ${[[42,110,15],[60,90,-20],[100,100,25],[118,120,-15],[50,140,30],[110,145,-25]].map(([x,y,r]) =>
+          `<ellipse cx="${x}" cy="${y}" rx="4" ry="6" fill="${acc}" opacity="0.5" transform="rotate(${r},${x},${y})"/>`
+        ).join('')}`;
+
+    case 14: // Temperance: angel pouring liquid as star-stream
+      return `
+        <!-- Angel figure (larger) -->
+        <circle cx="80" cy="100" r="5" fill="${acc}" opacity="0.9"/>
+        <line x1="80" y1="105" x2="80" y2="135" stroke="${acc}" stroke-width="1.5"/>
+        <line x1="80" y1="110" x2="70" y2="120" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="80" y1="110" x2="90" y2="120" stroke="${acc}" stroke-width="1.3"/>
+        <!-- Wings -->
+        <path d="M75,108 Q55,100 50,115 Q60,112 75,115" fill="${acc}" opacity="0.25"/>
+        <path d="M85,108 Q105,100 110,115 Q100,112 85,115" fill="${acc}" opacity="0.25"/>
+        <!-- Two cups -->
+        <path d="M54,148 L58,168 Q62,172 66,168 L70,148 Z" fill="none" stroke="${acc}" stroke-width="1.2" opacity="0.7"/>
+        <path d="M90,148 L94,168 Q98,172 102,168 L106,148 Z" fill="none" stroke="${acc}" stroke-width="1.2" opacity="0.7"/>
+        <!-- Star stream between cups -->
+        ${Array.from({length:8}, (_,i) => {
+          const t = i / 7;
+          const x = 62 + t * 36;
+          const y = 145 + Math.sin(t * Math.PI) * (-15);
+          const r = 1 + (0.5 - Math.abs(t-0.5)) * 2;
+          return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${acc}" opacity="${(0.4 + Math.sin(t*Math.PI)*0.5).toFixed(2)}"/>`;
+        }).join('')}`;
+
+    case 15: // Devil: large baobab tree wrapping tiny planet, two chained figures
+      return `
+        ${planet(80, 208, 90, 22, 'rgba(92,0,0,0.7)')}
+        <!-- Baobab trunk -->
+        <line x1="80" y1="208" x2="80" y2="120" stroke="${acc}" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+        <!-- Branches -->
+        <line x1="80" y1="130" x2="50" y2="108" stroke="${acc}" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+        <line x1="80" y1="135" x2="110" y2="115" stroke="${acc}" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+        <line x1="80" y1="128" x2="90" y2="100" stroke="${acc}" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+        <line x1="80" y1="125" x2="68" y2="95" stroke="${acc}" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        <!-- Two chained small figures at base -->
+        <circle cx="60" cy="192" r="3" fill="${acc}" opacity="0.7"/>
+        <line x1="60" y1="195" x2="60" y2="204" stroke="${acc}" stroke-width="1.2"/>
+        <circle cx="100" cy="192" r="3" fill="${acc}" opacity="0.7"/>
+        <line x1="100" y1="195" x2="100" y2="204" stroke="${acc}" stroke-width="1.2"/>
+        <!-- Chain -->
+        <path d="M63,200 Q80,196 97,200" stroke="${acc}" stroke-width="1" fill="none" stroke-dasharray="3,2" opacity="0.6"/>`;
+
+    case 16: // Tower: lighthouse tower, lightning bolt, two figures falling
+      return `
+        <!-- Tower -->
+        <rect x="70" y="120" width="20" height="80" fill="rgba(14,14,44,0.8)" stroke="${acc}" stroke-width="1" opacity="0.8"/>
+        <polygon points="60,120 80,100 100,120" fill="rgba(14,14,44,0.9)" stroke="${acc}" stroke-width="1" opacity="0.8"/>
+        <!-- Crown element at top -->
+        <rect x="68" y="118" width="24" height="4" fill="${acc}" opacity="0.6"/>
+        <!-- Windows -->
+        <rect x="76" y="135" width="8" height="10" rx="1" fill="${acc}" opacity="0.5"/>
+        <rect x="76" y="160" width="8" height="10" rx="1" fill="${acc}" opacity="0.4"/>
+        <!-- Lightning bolt -->
+        <path d="M110,80 L94,120 L102,120 L86,165" stroke="${acc}" stroke-width="2.5" fill="none" opacity="0.9"/>
+        <!-- Two figures falling -->
+        <circle cx="48" cy="150" r="3" fill="${acc}" opacity="0.7"/>
+        <line x1="48" y1="153" x2="44" y2="165" stroke="${acc}" stroke-width="1.2" opacity="0.7"/>
+        <circle cx="118" cy="158" r="3" fill="${acc}" opacity="0.7"/>
+        <line x1="118" y1="161" x2="122" y2="173" stroke="${acc}" stroke-width="1.2" opacity="0.7"/>`;
+
+    case 17: // Star: bright 8-pointed star, kneeling figure, 7 smaller stars
+      return `
+        ${planet(80, 210, 90, 22, 'rgba(0,4,24,0.8)')}
+        <!-- Central large 8-pointed star -->
+        ${sparkle(80, 110, 28, acc, 0.2)}
+        ${sparkle(80, 110, 18, acc, 0.4)}
+        ${sparkle(80, 110, 10, acc, 0.9)}
+        <!-- 7 smaller surrounding stars -->
+        ${Array.from({length:7}, (_,i) => {
+          const a = (i * 360/7 - 90) * Math.PI / 180;
+          const cx = 80 + 38 * Math.cos(a);
+          const cy = 110 + 38 * Math.sin(a);
+          return sparkle(cx, cy, 4, 'white', 0.6);
+        }).join('')}
+        <!-- Kneeling figure pouring water -->
+        <circle cx="80" cy="180" r="3.5" fill="${acc}" opacity="0.8"/>
+        <line x1="80" y1="183" x2="80" y2="194" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="80" y1="186" x2="72" y2="192" stroke="${acc}" stroke-width="1.2"/>
+        <path d="M72,192 Q70,200 68,204" stroke="${acc}" stroke-width="1" fill="none" opacity="0.6"/>`;
+
+    case 18: // Moon: large crescent, winding path in water, dog+wolf
+      return `
+        <!-- Large crescent moon face -->
+        <path d="M80,55 Q110,70 110,110 Q110,145 80,158 Q105,150 108,110 Q108,72 80,55 Z" fill="${acc}" opacity="0.55"/>
+        <circle cx="80" cy="106" r="34" fill="none" stroke="${acc}" stroke-width="0.8" opacity="0.3"/>
+        <!-- Water / path below -->
+        <path d="M16,180 Q40,172 80,175 Q120,178 144,170" stroke="${acc}" stroke-width="1" fill="none" opacity="0.5"/>
+        <!-- Winding path -->
+        <path d="M80,175 Q72,168 76,160 Q80,152 74,144 Q68,136 72,130" stroke="white" stroke-width="0.8" fill="none" stroke-dasharray="3,2" opacity="0.35"/>
+        <!-- Dog silhouette (left) -->
+        <ellipse cx="40" cy="178" rx="8" ry="5" fill="${acc}" opacity="0.5"/>
+        <circle cx="47" cy="174" r="3.5" fill="${acc}" opacity="0.5"/>
+        <line x1="40" y1="183" x2="38" y2="192" stroke="${acc}" stroke-width="1.2" opacity="0.5"/>
+        <line x1="42" y1="183" x2="44" y2="192" stroke="${acc}" stroke-width="1.2" opacity="0.5"/>
+        <!-- Wolf silhouette (right) -->
+        <ellipse cx="120" cy="178" rx="8" ry="5" fill="${acc}" opacity="0.4"/>
+        <circle cx="113" cy="173" r="3.5" fill="${acc}" opacity="0.4"/>
+        <line x1="118" y1="183" x2="116" y2="192" stroke="${acc}" stroke-width="1.2" opacity="0.4"/>
+        <line x1="122" y1="183" x2="124" y2="192" stroke="${acc}" stroke-width="1.2" opacity="0.4"/>`;
+
+    case 19: // Sun: radiant sun, joyful child
+      return `
+        <!-- Sun body -->
+        <circle cx="80" cy="105" r="28" fill="${acc}" opacity="0.3"/>
+        <circle cx="80" cy="105" r="18" fill="${acc}" opacity="0.6"/>
+        <!-- 12 rays -->
+        ${Array.from({length:12}, (_,i) => {
+          const a = (i * 30) * Math.PI / 180;
+          const x1 = 80 + 20 * Math.cos(a);
+          const y1 = 105 + 20 * Math.sin(a);
+          const x2 = 80 + 36 * Math.cos(a);
+          const y2 = 105 + 36 * Math.sin(a);
+          return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${acc}" stroke-width="2" stroke-linecap="round" opacity="0.7"/>`;
+        }).join('')}
+        ${planet(80, 210, 90, 22, 'rgba(92,50,0,0.6)')}
+        <!-- Joyful child, arms spread -->
+        <circle cx="80" cy="170" r="4.5" fill="${acc}" opacity="0.9"/>
+        <line x1="80" y1="174" x2="80" y2="188" stroke="${acc}" stroke-width="1.5"/>
+        <line x1="80" y1="177" x2="64" y2="172" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="80" y1="177" x2="96" y2="172" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="80" y1="188" x2="75" y2="198" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="80" y1="188" x2="85" y2="198" stroke="${acc}" stroke-width="1.3"/>`;
+
+    case 20: // Judgement: trumpet angel above clouds, three figures rising
+      return `
+        <!-- Angel -->
+        <circle cx="80" cy="72" r="5" fill="${acc}" opacity="0.9"/>
+        <line x1="80" y1="77" x2="80" y2="95" stroke="${acc}" stroke-width="1.5"/>
+        <!-- Wings -->
+        <path d="M75,80 Q52,70 48,85 Q60,82 75,86" fill="${acc}" opacity="0.3"/>
+        <path d="M85,80 Q108,70 112,85 Q100,82 85,86" fill="${acc}" opacity="0.3"/>
+        <!-- Trumpet -->
+        <path d="M84,81 L95,76 L100,72 L96,78 L104,78" stroke="${acc}" stroke-width="1.5" fill="none" opacity="0.8"/>
+        <!-- Clouds -->
+        <ellipse cx="80" cy="118" rx="60" ry="12" fill="rgba(201,162,39,0.08)" stroke="${acc}" stroke-width="0.6" opacity="0.5"/>
+        <!-- Three rising figures -->
+        ${[-24, 0, 24].map(dx => `
+          <circle cx="${80+dx}" cy="${155}" r="3.5" fill="${acc}" opacity="0.8"/>
+          <line x1="${80+dx}" y1="${158}" x2="${80+dx}" y2="${170}" stroke="${acc}" stroke-width="1.2"/>
+          <line x1="${80+dx}" y1="${161}" x2="${80+dx-5}" y2="${155}" stroke="${acc}" stroke-width="1.1"/>
+          <line x1="${80+dx}" y1="${161}" x2="${80+dx+5}" y2="${155}" stroke="${acc}" stroke-width="1.1"/>
+        `).join('')}`;
+
+    case 21: // World: dancing figure in oval laurel wreath, four corner symbols
+      return `
+        <!-- Oval laurel wreath -->
+        <ellipse cx="80" cy="130" rx="50" ry="70" fill="none" stroke="${acc}" stroke-width="2" opacity="0.5"/>
+        <ellipse cx="80" cy="130" rx="44" ry="64" fill="none" stroke="${acc}" stroke-width="0.8" opacity="0.3"/>
+        <!-- Leaf accents on wreath -->
+        ${Array.from({length:12}, (_,i) => {
+          const a = (i * 30 - 90) * Math.PI / 180;
+          const cx = 80 + 50 * Math.cos(a);
+          const cy = 130 + 70 * Math.sin(a);
+          return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2.5" fill="#69f0ae" opacity="0.5"/>`;
+        }).join('')}
+        <!-- Dancing figure in center -->
+        <circle cx="80" cy="115" r="5" fill="${acc}" opacity="0.9"/>
+        <line x1="80" y1="120" x2="80" y2="138" stroke="${acc}" stroke-width="1.5"/>
+        <line x1="80" y1="124" x2="70" y2="118" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="80" y1="124" x2="90" y2="130" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="80" y1="138" x2="73" y2="148" stroke="${acc}" stroke-width="1.3"/>
+        <line x1="80" y1="138" x2="88" y2="145" stroke="${acc}" stroke-width="1.3"/>
+        <!-- Four corner symbols -->
+        ${sparkle(26, 76, 5, acc, 0.7)}
+        ${sparkle(134, 76, 5, acc, 0.7)}
+        ${sparkle(26, 184, 5, acc, 0.7)}
+        ${sparkle(134, 184, 5, acc, 0.7)}`;
+
+    default: return '';
+  }
+}
+
+// ===================== CARD BACK SVG =====================
+function buildCardBackSVG() {
+  let stars = '';
+  const rng = seededRand(999);
+  for (let i = 0; i < 30; i++) {
+    const x = rng() * 148 + 6;
+    const y = rng() * 228 + 6;
+    const r = rng() * 1 + 0.3;
+    const op = rng() * 0.5 + 0.1;
+    stars += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="white" opacity="${op.toFixed(2)}"/>`;
+  }
+
+  // Constellation dots
+  let constellations = '';
+  const cPts = [[80,120],[65,108],[95,108],[72,96],[88,96],[80,84]];
+  for (let i = 0; i < cPts.length; i++) {
+    constellations += `<circle cx="${cPts[i][0]}" cy="${cPts[i][1]}" r="1.5" fill="rgba(201,162,39,0.6)"/>`;
+    if (i > 0) {
+      constellations += `<line x1="${cPts[i-1][0]}" y1="${cPts[i-1][1]}" x2="${cPts[i][0]}" y2="${cPts[i][1]}" stroke="rgba(201,162,39,0.25)" stroke-width="0.5"/>`;
+    }
+  }
+
+  // Concentric circles
+  let circles = '';
+  for (let r = 20; r <= 55; r += 10) {
+    circles += `<circle cx="80" cy="120" r="${r}" fill="none" stroke="rgba(201,162,39,0.15)" stroke-width="0.7"/>`;
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 240">
+  <defs>
+    <linearGradient id="backGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#050a28"/>
+      <stop offset="100%" stop-color="#0f0540"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="240" rx="6" fill="url(#backGrad)"/>
+  ${stars}
+  <!-- Double border -->
+  <rect x="5" y="5" width="150" height="230" rx="5" fill="none" stroke="rgba(201,162,39,0.5)" stroke-width="0.8"/>
+  <rect x="9" y="9" width="142" height="222" rx="4" fill="none" stroke="rgba(201,162,39,0.25)" stroke-width="0.5"/>
+  <!-- Concentric circles -->
+  ${circles}
+  <!-- Constellation -->
+  ${constellations}
+  <!-- Central 8-pointed star mandala -->
+  <path d="M80,64 L83,77 L96,70 L86,80 L99,83 L86,86 L96,96 L83,89 L80,102 L77,89 L64,96 L74,86 L61,83 L74,80 L64,70 L77,77 Z" fill="rgba(201,162,39,0.7)" stroke="rgba(245,224,122,0.4)" stroke-width="0.5"/>
+  <!-- Inner star detail -->
+  <path d="M80,70 L82,77 L89,74 L84,80 L91,82 L84,84 L89,90 L82,87 L80,94 L78,87 L71,90 L76,84 L69,82 L76,80 L71,74 L78,77 Z" fill="rgba(245,224,122,0.4)"/>
+  <circle cx="80" cy="82" r="4" fill="rgba(245,224,122,0.8)"/>
+</svg>`;
+}
+
+// ===================== STARFIELD =====================
+function initStarfield() {
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+
+  const stars = Array.from({length: 150}, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: Math.random() * 1.5 + 0.2,
+    speed: Math.random() * 0.02 + 0.005,
+    phase: Math.random() * Math.PI * 2,
+    color: Math.random() < 0.2 ? '#f5e07a' : (Math.random() < 0.3 ? '#e8a0b4' : '#ffffff'),
+  }));
+
+  // ---- 流れ星 ----
+  const shootingStars = [];
+  let nextSpawn = 200 + Math.floor(Math.random() * 250);
+
+  function spawnShootingStar() {
+    shootingStars.push({
+      x: Math.random() * 0.65,          // 画面左65%以内からスタート
+      y: Math.random() * 0.50,          // 画面上50%以内からスタート
+      vx: 0.0022 + Math.random() * 0.0028, // 右方向の速度
+      vy: 0.0007 + Math.random() * 0.0008, // やや下方向
+      trailFrac: 0.06 + Math.random() * 0.07, // 尾の長さ（画面幅比）
+      life: 0,
+      maxLife: 50 + Math.floor(Math.random() * 40),
+    });
+  }
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const now = t * 0.016;
+
+    // 通常の星（またたき）
+    for (const s of stars) {
+      const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(now * s.speed * 60 + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.color;
+      ctx.globalAlpha = alpha;
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // 流れ星のスポーン管理
+    if (t >= nextSpawn) {
+      spawnShootingStar();
+      nextSpawn = t + 220 + Math.floor(Math.random() * 300); // 次は3〜9秒後
+    }
+
+    // 流れ星の描画
+    for (let i = shootingStars.length - 1; i >= 0; i--) {
+      const ss = shootingStars[i];
+      ss.life++;
+      ss.x += ss.vx;
+      ss.y += ss.vy;
+
+      // フェードイン／アウト
+      const p = ss.life / ss.maxLife;
+      const alpha = p < 0.15 ? p / 0.15 : (p > 0.72 ? (1 - p) / 0.28 : 1);
+
+      const hx = ss.x * canvas.width;
+      const hy = ss.y * canvas.height;
+      const trailLen = ss.trailFrac * canvas.width;
+      const angle = Math.atan2(ss.vy, ss.vx);
+      const tx = hx - Math.cos(angle) * trailLen;
+      const ty = hy - Math.sin(angle) * trailLen;
+
+      // グラデーションの尾
+      const grad = ctx.createLinearGradient(tx, ty, hx, hy);
+      grad.addColorStop(0,   'rgba(255,255,255,0)');
+      grad.addColorStop(0.5, `rgba(210,235,255,${0.3 * alpha})`);
+      grad.addColorStop(1,   `rgba(255,255,255,${alpha})`);
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(hx, hy);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+
+      // 輝く先端
+      ctx.beginPath();
+      ctx.arc(hx, hy, 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = 'white';
+      ctx.globalAlpha = alpha;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      if (ss.life >= ss.maxLife) shootingStars.splice(i, 1);
+    }
+
+    t++;
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ===================== APP STATE =====================
+let selectedCards = []; // [{card, isReversed}, ...]
+const backSVG = buildCardBackSVG();
+
+// ===================== SCREEN TRANSITIONS =====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+  });
+  const target = document.getElementById(id);
+  target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ===================== SCREEN 1 -> 2 =====================
+function goToSelect() {
+  selectedCards = [];
+  buildCardGrid();
+  resetSlots();
+  document.getElementById('btn-read').classList.remove('visible');
+  showScreen('screen-select');
+}
+
+function buildCardGrid() {
+  const grid = document.getElementById('card-grid');
+  grid.innerHTML = '';
+  // Shuffle card order for display
+  const order = CARDS.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  order.forEach(idx => {
+    const card = CARDS[idx];
+    const el = document.createElement('div');
+    el.className = 'deck-card';
+    el.dataset.id = card.id;
+    el.innerHTML = backSVG;
+    el.addEventListener('click', () => onCardClick(card, el));
+    grid.appendChild(el);
+  });
+}
+
+function resetSlots() {
+  for (let i = 0; i < 3; i++) {
+    document.getElementById(`slot-${i}`).classList.remove('filled');
+    document.getElementById(`mini-${i}`).innerHTML = '';
+  }
+}
+
+function onCardClick(card, el) {
+  if (selectedCards.length >= 3) return;
+  if (selectedCards.find(s => s.card.id === card.id)) return;
+  const isReversed = Math.random() < 0.5;
+  selectedCards.push({ card, isReversed });
+  el.classList.add('selected');
+
+  const idx = selectedCards.length - 1;
+  const slot = document.getElementById(`slot-${idx}`);
+  const mini = document.getElementById(`mini-${idx}`);
+  slot.classList.add('filled');
+  const cardSVG = buildCardSVG(card);
+  mini.innerHTML = cardSVG;
+  if (isReversed) {
+    mini.querySelector('svg').style.transform = 'rotate(180deg)';
+  }
+
+  if (selectedCards.length === 3) {
+    document.getElementById('btn-read').classList.add('visible');
+  }
+}
+
+// ===================== SCREEN 2 -> 3 =====================
+const POSITIONS = ['過去', '現在', '未来'];
+
+function goToReading() {
+  buildReadingScreen();
+  showScreen('screen-reading');
+
+  // Staggered flip animation
+  setTimeout(() => flipCard(0), 400);
+  setTimeout(() => flipCard(1), 1000);
+  setTimeout(() => flipCard(2), 1600);
+
+  // Show reading message after all flips
+  setTimeout(() => {
+    document.getElementById('reading-message').classList.add('visible');
+  }, 2800);
+}
+
+function buildReadingScreen() {
+  const row = document.getElementById('cards-row');
+  row.innerHTML = '';
+
+  selectedCards.forEach(({ card, isReversed }, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'reading-card-wrap';
+
+    const posLabel = document.createElement('div');
+    posLabel.className = 'pos-title';
+    posLabel.textContent = POSITIONS[idx];
+
+    const flipContainer = document.createElement('div');
+    flipContainer.className = 'card-flip-container';
+
+    const flipInner = document.createElement('div');
+    flipInner.className = 'card-flip-inner';
+    flipInner.id = `flip-${idx}`;
+
+    const backFace = document.createElement('div');
+    backFace.className = 'card-back-face';
+    backFace.innerHTML = backSVG;
+
+    const frontFace = document.createElement('div');
+    frontFace.className = `card-face${isReversed ? ' reversed' : ''}`;
+    frontFace.innerHTML = buildCardSVG(card);
+
+    flipInner.appendChild(backFace);
+    flipInner.appendChild(frontFace);
+    flipContainer.appendChild(flipInner);
+
+    const info = document.createElement('div');
+    info.className = 'card-info';
+    info.id = `info-${idx}`;
+
+    const keywords = isReversed ? card.reversed : card.upright;
+    info.innerHTML = `
+      <div class="card-name-jp">${card.name}</div>
+      <div class="card-name-en">${card.nameEn}</div>
+      <span class="orient-badge ${isReversed ? 'reversed' : 'upright'}">${isReversed ? '逆位置' : '正位置'}</span>
+      <div class="card-keywords">${keywords}</div>
+    `;
+
+    wrap.appendChild(posLabel);
+    wrap.appendChild(flipContainer);
+    wrap.appendChild(info);
+    row.appendChild(wrap);
+  });
+
+  // Build reading message
+  const msgEl = document.getElementById('reading-message');
+  msgEl.classList.remove('visible');
+  msgEl.innerHTML = `<p>${generateReading(selectedCards)}</p>`;
+}
+
+function flipCard(idx) {
+  const inner = document.getElementById(`flip-${idx}`);
+  const info = document.getElementById(`info-${idx}`);
+  if (inner) inner.classList.add('flipped');
+  setTimeout(() => { if (info) info.classList.add('visible'); }, 400);
+}
+
+// ===================== READING GENERATOR =====================
+
+// カードごとに3パターンのフレーズ（正位置）
+const CARD_PHRASES = [
+  ['まっさらな気持ちで踏み出す勇気','新しい何かへのときめき','自分を信じて飛び込む純粋さ'],                           // 0 Fool
+  ['あなたの中に眠っている力','何でもできるという確かな手応え','才能を信じる気持ち'],                               // 1 Magician
+  ['心の奥から聞こえてくる声','言葉にならない深い直感','静かに見守る内なる知恵'],                                   // 2 High Priestess
+  ['あふれるほどの愛情と豊かさ','自分を大切にすることで生まれる輝き','与えることの喜び'],                           // 3 Empress
+  ['揺るぎない安心感と信頼','しっかりと地に足のついた安定','守られているという感覚'],                               // 4 Emperor
+  ['大切にしてきた価値観','誰かから受け取ってきた知恵','信じることの力'],                                           // 5 Hierophant
+  ['誰かを大切に思う温かい気持ち','あなたにとって本当に大事なもの','心から繋がれている感覚'],                       // 6 Lovers
+  ['どんな困難も突き進む強い意志','前へ向かっていく推進力','勝利に向けた集中力'],                                   // 7 Chariot
+  ['内側から湧き出る穏やかな強さ','焦らず続けてきた忍耐','優しさの中にある揺るぎなさ'],                             // 8 Strength
+  ['ひとりで静かに向き合った時間','自分自身の声を聴こうとする姿勢','内なる光を手放さないこと'],                     // 9 Hermit
+  ['流れに乗って変わっていく喜び','巡り巡ってくる幸運','変化を楽しむ柔らかな心'],                                   // 10 Fortune
+  ['誠実に向き合い続けてきた姿勢','自分の行動への責任感','正直でいることの清らかさ'],                               // 11 Justice
+  ['立ち止まって視点を変えること','無駄に見えた時間に宿っていた意味','急がないことで見えてくるもの'],               // 12 Hanged Man
+  ['古いものを手放す勇気','新しい自分へと変わっていく流れ','終わりは必ず始まりに繋がること'],                       // 13 Death
+  ['焦らずバランスを取りながら進む力','ちょうどいい落ち着きを見つけること','調和の中で輝くあなた'],                 // 14 Temperance
+  ['気づかないうちに縛られていたもの','実は手放せるものを抱えていること','影の部分と向き合う勇気'],                 // 15 Devil
+  ['突然やってきた大きな変化','崩れたからこそ始まる新しい土台','嵐の中でも失わなかったもの'],                       // 16 Tower
+  ['どんな夜にも灯り続けていた希望','自分を癒す静かな時間','未来を照らすやさしい光'],                               // 17 Star
+  ['夢と現実の間で揺れる気持ち','答えのない問いと向き合う時間','深いところで感じる何か'],                           // 18 Moon
+  ['心から笑えたあの瞬間','太陽みたいな明るいエネルギー','純粋に喜べる自分'],                                       // 19 Sun
+  ['自分を新しく更新するタイミング','内側から呼ばれているような感覚','使命に気づく目覚め'],                         // 20 Judgement
+  ['やり遂げたことへの誇り','すべてが一つに繋がった完成感','旅の終わりと次の始まり'],                               // 21 World
+];
+
+// カードごとに3パターンのフレーズ（逆位置）
+const CARD_PHRASES_REV = [
+  ['迷って立ちすくんでいる気持ち','踏み出すのをためらっていること','準備不足のまま焦ってしまうこと'],                  // 0
+  ['使いきれていない才能へのもどかしさ','動けないままのもどかしさ','自信を持ちきれない日々'],                          // 1
+  ['直感を信じられないでいること','心の声を聞けていないこと','何かを見て見ぬふりしている感覚'],                        // 2
+  ['心がくたびれて余裕をなくしていること','誰かを優先しすぎていること','愛情が空回りしている感じ'],                    // 3
+  ['がんばりすぎて肩が重くなっていること','自分でやらなきゃというプレッシャー','管理しすぎていること'],                  // 4
+  ['ルールや常識が窮屈に感じていること','周りに合わせ続けて疲れてしまっていること','本当の自分を出せていない感覚'],      // 5
+  ['選べなくて迷っていること','大切な関係でのすれ違い','本心を伝えられずにいること'],                                  // 6
+  ['空回りして疲れてしまっていること','頑張っているのに前に進めない焦り','方向性が定まらない迷い'],                     // 7
+  ['自分に自信を持てない日々','弱い自分を責めてしまうこと','力が湧いてこない疲れ感'],                                  // 8
+  ['孤独を感じて心が閉じてしまっていること','誰とも繋がれない寂しさ','引きこもりたくなる気持ち'],                       // 9
+  ['変化についていけない不安','流れに逆らって苦しくなっていること','うまくいかない時期が続いている感じ'],               // 10
+  ['不公平だと感じているもやもや','白黒つけられなくて困っていること','正直でいることへの躊躇'],                         // 11
+  ['無駄な時間を過ごしているような焦り','待ち続けることへの苦しさ','犠牲になっている感覚'],                             // 12
+  ['変わらなきゃとわかっているのに動けないこと','終わりを受け入れることへの怖さ','手放せずに抱えていること'],           // 13
+  ['全部うまくいかない感じ','バランスが崩れてふらふらしていること','何もかも中途半端に見えること'],                     // 14
+  ['わかっているのにやめられないこと','縛られているのに気づいていないこと','逃げ出せないような感覚'],                    // 15
+  ['急な変化に戸惑い混乱していること','不安で先が見えない気持ち','壊れていくものへの恐れ'],                             // 16
+  ['希望を見失いそうになっていること','夢が遠くなったような気持ち','光が見えにくくなっていること'],                      // 17
+  ['何が本当かわからなくなっている混乱','不安や恐れに心が揺れていること','幻想と現実の区別がつきにくいこと'],           // 18
+  ['元気が出なくて曇った気持ち','喜べないもどかしさ','やる気がどこかへ行ってしまった感じ'],                             // 19
+  ['後悔を手放せずにいること','過去を引きずって前を向けないこと','自分を許せない気持ち'],                               // 20
+  ['もう少しで完成なのに足踏みしていること','ゴールが見えなくなっている焦り','区切りをつけられない気持ち'],             // 21
+];
+
+const LP_QUOTES = [
+  '「大切なものは、目には見えないんだよ」',
+  '「夜空の星を見るたびに、笑い声が聞こえてくるよ」',
+  '「砂漠が美しいのは、どこかに井戸を隠しているからさ」',
+  '「ひとつの星を愛したなら、夜は美しいものになる」',
+  '「本当に大事なことは、心で見なければわからない」',
+  '「お前の薔薇がかけがえないのは、お前が時間をかけたからだよ」',
+  '「人を手なずけると、涙を流すことになる。でもそれでもいい」',
+  '「あなたが薔薇をかけがえないものにしたのは、あなたが薔薇に費やした時間なんだ」',
+];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function getPhrase(c) { return pick(c.isReversed ? CARD_PHRASES_REV[c.card.id] : CARD_PHRASES[c.card.id]); }
+
+function generateReading(cards) {
+  const [past, present, future] = cards;
+  const pt  = getPhrase(past);
+  const prt = getPhrase(present);
+  const ft  = getPhrase(future);
+  const pid = past.card.id, cid = present.card.id, fid = future.card.id;
+
+  // 10種類のテンプレート構造
+  const templates = [
+    // ① 過去起点・流れ型
+    `${pt}を経験してきたあなたへ。今は${prt}の中にいると思うけれど、その先には${ft}が待っていますよ。`,
+    // ② 現在フォーカス型
+    `今のあなたには、${prt}がそばにあります。${pt}という過去の積み重ねがあってこそ。これからは${ft}の流れに乗っていけそうです。`,
+    // ③ 未来への期待型
+    `これからのあなたに流れ込んでくるのは、${ft}というエネルギー。${pt}を越えて、${prt}にいる今のあなただからこそ受け取れる贈り物です。`,
+    // ④ 詩的・余韻型
+    `${pt}……そして今、${prt}。この旅のその先に、${ft}が静かに光っています。`,
+    // ⑤ 肯定・寄り添い型
+    `${pt}という時間があったこと、ちゃんと意味があったんです。今の${prt}も、これからの${ft}も、全部あなたの大切な物語の一部です。`,
+    // ⑥ 問いかけ型
+    `今、心に何かを感じていますか？それが${prt}なのかもしれません。${pt}を経てきたあなたの前には、${ft}という光の道が続いています。`,
+    // ⑦ 優しい受容型
+    `${pt}があったのは、あなたのせいじゃない。今感じている${prt}も、ちゃんとわかります。だから大丈夫——${ft}がそっとやってきます。`,
+    // ⑧ 力強い応援型
+    `過去の${pt}は、あなたを確実に強くしてくれました。今の${prt}はその証拠。未来には${ft}という素敵な展開が待っています。`,
+    // ⑨ 王子さまスタイル
+    `星の王子さまなら、きっとこう言うでしょう——「${pt}はね、本当は大切なものだったんだよ」と。今感じている${prt}、そして${ft}という未来、全部あなただけの星の物語です。`,
+    // ⑩ コンパクト・余白型
+    `${pt}から、${prt}へ。そしてあなたの次のページには、${ft}が書かれています。`,
+  ];
+  const main = pick(templates);
+
+  // カード・状況別の締めくくりメッセージ（より多くのパターン）
+  let extra = '';
+  if (fid === 19) { // 太陽
+    extra = pick(['太陽の光があなたに向かって降り注いでいます。思いきり受け取ってくださいね。','笑顔が一番の魔法です。今日もあなたらしく輝いて。','喜びを遠慮せず受け取っていい、そんな流れが来ていますよ。']);
+  } else if (fid === 17) { // 星
+    extra = pick(['希望の光は、消えていたわけじゃない。ずっとそこにあったんです。','どんな夜も、必ず星は出ています。あなたの星も、ちゃんとそこにありますよ。','願いを声に出してみてください。星が聴いています。']);
+  } else if (fid === 21) { // 世界
+    extra = pick(['ここまで歩いてきたこと、本当にすごいことです。','あなたの努力は、ちゃんと実を結びます。もう少しだけ信じて。','完成の瞬間は、もうすぐそこです。']);
+  } else if (fid === 6) { // 恋人
+    extra = pick(['大切な誰かとの絆が、深まっていくサインかもしれません。','あなたの心が選ぶものを、信じてあげてください。','愛は、受け取るだけでなく、与えることでも輝きます。']);
+  } else if (fid === 0) { // 愚者
+    extra = pick(['新しい冒険が始まろうとしています。荷物は軽めにして、楽しんで。','「どうなるかわからない」って、実はとても素敵なことかもしれません。','まっさらな気持ちで、一歩踏み出してみましょう。']);
+  } else if (fid === 13 || fid === 16) { // 死神・塔
+    extra = pick(['変化は怖いけれど、その先にきっと新しい空気が待っています。','何かが終わるとき、必ず何かが始まります。','嵐の後の夜明けは、特別に美しいものです。','壊れたものの中から、本当に大切なものだけが残ります。']);
+  } else if (fid === 18) { // 月
+    extra = pick(['すぐに答えを出さなくていい。ゆっくりと感じてみてください。','深いところにある答えは、静かにしていると聞こえてきます。','月明かりは、ゆっくり照らしてくれます。あなたのペースで大丈夫。']);
+  } else if (fid === 10) { // 運命の輪
+    extra = pick(['流れが変わり始めています。この波に乗ってみてください。','タイミングは、今がちょうどいい。','運は巡るもの。あなたにも必ずいい風が吹いてきます。']);
+  } else if (future.isReversed) {
+    extra = pick(['少し立ち止まって、自分の気持ちをじっくり聞いてあげる時間を作ってみて。','完璧じゃなくていいんです。今のあなたのままで、十分すてきですよ。','小さな一歩でいい。まず自分を大切にすることから始めてみてね。','どんな気持ちも、ちゃんとあなたの一部。否定しなくていいんです。','休むことも、前に進むことと同じくらい大切なことです。']);
+  } else if (cid === 9 || cid === 12 || cid === 2) { // 隠者・吊るされた男・女教皇
+    extra = pick(['今は静かにしていていい時期です。焦らなくて大丈夫。','ひとりの時間が、次の一歩の力になりますよ。','内側の声を、もう少し丁寧に聴いてみてください。']);
+  } else if (cid === 6 || cid === 3 || cid === 14) { // 恋人・女帝・節制
+    extra = pick(['誰かへの思いやりが、あなた自身にも返ってきます。','愛は、与えれば与えるほど大きくなるものです。','今のあなたの優しさは、周りをちゃんと照らしていますよ。']);
+  } else if (pid === 13 || pid === 16 || pid === 15 || past.isReversed) {
+    extra = pick(['つらいことがあったかもしれないけれど、それがあなたを今ここへ連れてきてくれました。','その痛みも全部、あなたの一部。ちゃんと認めてあげてくださいね。','あの頃よりも、あなたは確実に強くなっています。','しんどかった時期があったからこそ、今のあなたがいる。']);
+  } else {
+    extra = pick(['あなたの歩みは、ちゃんと星に見守られていますよ。','一人じゃないよって、星たちがそっと伝えています。','今日のあなたに、そっと拍手を送りたいです。','あなたはいつも、思っているよりずっと頑張っています。','その優しさを、自分にも向けてあげてくださいね。','迷いながらでいい。それでも歩いていることが、すごいことです。','あなたの物語は、今この瞬間も美しく紡がれています。']);
+  }
+
+  const quote = pick(LP_QUOTES);
+  return `${main}<br><br>${extra}<em class="lp-quote">${quote} — 星の王子さま</em>`;
+}
+
+// ===================== RESET =====================
+function resetApp() {
+  selectedCards = [];
+  showScreen('screen-intro');
+}
+
+// ===================== INIT =====================
+initStarfield();
+</script>
+</body>
+</html>
